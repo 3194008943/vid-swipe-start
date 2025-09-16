@@ -1,11 +1,15 @@
 import React, { useState, useRef, useEffect } from "react";
+import { Navigate } from "react-router-dom";
 import { VideoCard } from "@/components/VideoCard";
 import { Navigation } from "@/components/Navigation";
 import { CommentSheet } from "@/components/CommentSheet";
 import { UploadModal } from "@/components/UploadModal";
 import { ProfileView } from "@/components/ProfileView";
 import { DiscoverView } from "@/components/DiscoverView";
+import MessagesView from "@/components/MessagesView";
 import { mockVideos } from "@/data/mockData";
+import { useAuth } from "@/hooks/useAuth";
+import { Loader2 } from "lucide-react";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("home");
@@ -13,6 +17,20 @@ const Index = () => {
   const [isCommentOpen, setIsCommentOpen] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { user, loading } = useAuth();
+
+  // Redirect to auth if not logged in
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
 
   useEffect(() => {
     const handleScroll = (e: Event) => {
@@ -55,6 +73,8 @@ const Index = () => {
         );
       case "discover":
         return <DiscoverView />;
+      case "messages":
+        return <MessagesView />;
       case "profile":
         return <ProfileView />;
       default:
