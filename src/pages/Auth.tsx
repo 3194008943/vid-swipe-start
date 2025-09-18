@@ -71,24 +71,23 @@ const Auth: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     
-    const redirectUrl = `${window.location.origin}/`;
-    
     const { error, data } = await supabase.auth.signUp({
       email: signupEmail,
       password: signupPassword,
       options: {
-        emailRedirectTo: redirectUrl,
+        emailRedirectTo: `${window.location.origin}/`,
         data: {
           username: signupUsername,
           display_name: signupDisplayName || signupUsername,
-        },
-        captchaToken: undefined // Explicitly bypass captcha for now
+        }
       }
     });
 
     if (error) {
       if (error.message.includes("already registered")) {
         toast.error("This email is already registered. Please log in instead.");
+      } else if (error.message.includes("captcha") || error.message.includes("Captcha")) {
+        toast.error("CAPTCHA verification required. Please disable CAPTCHA in Supabase dashboard: Authentication → Providers → Email → CAPTCHA Protection");
       } else {
         toast.error(error.message);
       }
