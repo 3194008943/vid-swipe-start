@@ -73,7 +73,7 @@ const Auth: React.FC = () => {
     
     const redirectUrl = `${window.location.origin}/`;
     
-    const { error } = await supabase.auth.signUp({
+    const { error, data } = await supabase.auth.signUp({
       email: signupEmail,
       password: signupPassword,
       options: {
@@ -81,7 +81,8 @@ const Auth: React.FC = () => {
         data: {
           username: signupUsername,
           display_name: signupDisplayName || signupUsername,
-        }
+        },
+        captchaToken: undefined // Explicitly bypass captcha for now
       }
     });
 
