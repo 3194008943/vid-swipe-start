@@ -6,6 +6,7 @@ import { CommentSheet } from "@/components/CommentSheet";
 import { UploadModal } from "@/components/UploadModal";
 import { ProfileView } from "@/components/ProfileView";
 import { DiscoverView } from "@/components/DiscoverView";
+import { SettingsView } from "@/components/SettingsView";
 import MessagesView from "@/components/MessagesView";
 import { mockVideos } from "@/data/mockData";
 import { useAuth } from "@/hooks/useAuth";
@@ -37,6 +38,18 @@ const Index = () => {
       return () => container.removeEventListener("scroll", handleScroll);
     }
   }, [currentVideoIndex, activeTab]);
+
+  // Listen for settings navigation from ProfileView
+  useEffect(() => {
+    const handleNavigate = (e: CustomEvent) => {
+      if (e.detail === 'settings') {
+        setActiveTab('settings');
+      }
+    };
+    
+    window.addEventListener('navigate' as any, handleNavigate);
+    return () => window.removeEventListener('navigate' as any, handleNavigate);
+  }, []);
 
   // Redirect to auth if not logged in
   if (loading) {
@@ -77,6 +90,8 @@ const Index = () => {
         return <MessagesView />;
       case "profile":
         return <ProfileView />;
+      case "settings":
+        return <SettingsView onBack={() => setActiveTab("profile")} />;
       default:
         return null;
     }
