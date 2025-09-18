@@ -19,19 +19,6 @@ const Index = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { user, loading } = useAuth();
 
-  // Redirect to auth if not logged in
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-
   useEffect(() => {
     const handleScroll = (e: Event) => {
       const container = e.target as HTMLDivElement;
@@ -50,6 +37,19 @@ const Index = () => {
       return () => container.removeEventListener("scroll", handleScroll);
     }
   }, [currentVideoIndex, activeTab]);
+
+  // Redirect to auth if not logged in
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
 
   const renderContent = () => {
     switch (activeTab) {
