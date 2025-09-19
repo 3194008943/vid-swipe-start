@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      conversations: {
+        Row: {
+          created_at: string
+          id: string
+          last_message: string | null
+          last_message_at: string | null
+          last_message_id: string | null
+          last_message_type: string | null
+          participant1_id: string
+          participant2_id: string
+          read_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_message?: string | null
+          last_message_at?: string | null
+          last_message_id?: string | null
+          last_message_type?: string | null
+          participant1_id: string
+          participant2_id: string
+          read_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_message?: string | null
+          last_message_at?: string | null
+          last_message_id?: string | null
+          last_message_type?: string | null
+          participant1_id?: string
+          participant2_id?: string
+          read_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string
@@ -44,19 +83,19 @@ export type Database = {
             foreignKeyName: "messages_recipient_id_fkey"
             columns: ["recipient_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "Policies"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "messages_sender_id_fkey"
             columns: ["sender_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "Policies"
             referencedColumns: ["id"]
           },
         ]
       }
-      profiles: {
+      Policies: {
         Row: {
           avatar_url: string | null
           bio: string | null
@@ -88,15 +127,39 @@ export type Database = {
       }
     }
     Views: {
-      conversations: {
+      conversation_view: {
         Row: {
           conversation_id: string | null
+          created_at: string | null
           last_message: string | null
           last_message_at: string | null
           last_message_id: string | null
           last_message_type: string | null
           other_user_id: string | null
           read_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string | null
+          last_message?: string | null
+          last_message_at?: string | null
+          last_message_id?: string | null
+          last_message_type?: string | null
+          other_user_id?: never
+          read_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string | null
+          last_message?: string | null
+          last_message_at?: string | null
+          last_message_id?: string | null
+          last_message_type?: string | null
+          other_user_id?: never
+          read_at?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
