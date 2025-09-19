@@ -27,10 +27,12 @@ interface Message {
 }
 
 interface Conversation {
-  other_user_id: string;
-  last_message: string;
+  id: string;
+  participant1_id: string;
+  participant2_id: string;
+  last_message: string | null;
   last_message_at: string;
-  last_message_type: "sent" | "received";
+  last_message_type: string | null;
   read_at: string | null;
   profile?: Profile;
 }
@@ -84,6 +86,8 @@ const MessagesView: React.FC = () => {
   }, [currentUserId, selectedUser]);
 
   const loadConversations = async () => {
+    if (!currentUserId) return;
+    
     const { data, error } = await supabase
       .from('conversations')
       .select('*')
@@ -96,17 +100,28 @@ const MessagesView: React.FC = () => {
 
     // Load profiles for conversations
     if (data && data.length > 0) {
-      const userIds = data.map(conv => conv.other_user_id);
+      const userIds = data.map(conv => {
+        // Get the other user ID based on current user
+        return conv.participant1_id === currentUserId 
+          ? conv.participant2_id 
+          : conv.participant1_id;
+      });
+      
       const { data: profiles } = await supabase
         .from('profiles')
         .select('*')
         .in('id', userIds);
 
-      const conversationsWithProfiles = data.map(conv => ({
-        ...conv,
-        last_message_type: conv.last_message_type as "sent" | "received",
-        profile: profiles?.find(p => p.id === conv.other_user_id)
-      }));
+      const conversationsWithProfiles = data.map(conv => {
+        const otherUserId = conv.participant1_id === currentUserId 
+          ? conv.participant2_id 
+          : conv.participant1_id;
+        
+        return {
+          ...conv,
+          profile: profiles?.find(p => p.id === otherUserId)
+        };
+      });
 
       setConversations(conversationsWithProfiles);
     } else {
@@ -323,7 +338,7 @@ const MessagesView: React.FC = () => {
                 <h3 className="text-sm font-semibold text-muted-foreground mb-3">CONVERSATIONS</h3>
                 {conversations.map((conv) => (
                   <div
-                    key={conv.other_user_id}
+                    key={conv.id}
                     onClick={() => conv.profile && selectConversation(conv.profile)}
                     className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted cursor-pointer transition-colors"
                   >
