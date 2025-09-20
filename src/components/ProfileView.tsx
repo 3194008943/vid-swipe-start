@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, Share2, Grid3x3, Heart, Bookmark, Gift, ShoppingBag, Crown, QrCode, TrendingUp, Sparkles, Edit, UserPlus, Trash2, Hash, Plus } from "lucide-react";
+import { Settings, Share2, Grid3x3, Heart, Bookmark, Gift, ShoppingBag, Crown, QrCode, TrendingUp, Sparkles, Edit, UserPlus, Trash2, Hash, Plus, LogOut } from "lucide-react";
 import { formatNumber } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -95,6 +95,23 @@ export const ProfileView: React.FC = () => {
         description: "Your video has been removed successfully.",
       });
       loadVideos();
+    }
+  };
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to log out. Please try again.",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "You have been logged out successfully.",
+      });
+      navigate("/auth");
     }
   };
 
@@ -241,6 +258,14 @@ export const ProfileView: React.FC = () => {
           <Button variant="outline" className="flex-1 group" onClick={handleShare}>
             <QrCode className="h-4 w-4 mr-2 group-hover:rotate-12 transition-transform" />
             Share
+          </Button>
+          <Button 
+            variant="outline" 
+            className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Logout
           </Button>
         </div>
       </div>

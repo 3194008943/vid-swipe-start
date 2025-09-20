@@ -1,7 +1,10 @@
 import React from "react";
-import { Home, Search, Plus, User, MessageCircle } from "lucide-react";
+import { Home, Search, Plus, User, MessageCircle, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface NavigationProps {
   activeTab: string;
@@ -14,6 +17,8 @@ export const Navigation: React.FC<NavigationProps> = ({
   onTabChange,
   onUploadClick,
 }) => {
+  const navigate = useNavigate();
+  
   const tabs = [
     { id: "home", icon: Home, label: "Home" },
     { id: "discover", icon: Search, label: "Discover" },
@@ -21,6 +26,16 @@ export const Navigation: React.FC<NavigationProps> = ({
     { id: "messages", icon: MessageCircle, label: "Messages" },
     { id: "profile", icon: User, label: "Profile" },
   ];
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error("Failed to log out");
+    } else {
+      toast.success("Logged out successfully");
+      navigate("/auth");
+    }
+  };
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-lg border-t border-border">
@@ -55,6 +70,14 @@ export const Navigation: React.FC<NavigationProps> = ({
             </Button>
           );
         })}
+        <Button
+          variant="ghost"
+          className="flex flex-col gap-1 h-auto py-2 px-4 text-destructive"
+          onClick={handleLogout}
+        >
+          <LogOut className="h-5 w-5" />
+          <span className="text-[10px]">Logout</span>
+        </Button>
       </div>
     </div>
   );
