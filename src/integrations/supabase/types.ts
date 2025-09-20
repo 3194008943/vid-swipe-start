@@ -387,7 +387,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          conversation_id?: string | null
+          conversation_id?: never
           created_at?: string | null
           last_message?: string | null
           last_message_at?: string | null
@@ -398,7 +398,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          conversation_id?: string | null
+          conversation_id?: never
           created_at?: string | null
           last_message?: string | null
           last_message_at?: string | null
