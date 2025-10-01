@@ -7,16 +7,22 @@ import { UploadModal } from "@/components/UploadModal";
 import { ProfileView } from "@/components/ProfileView";
 import { DiscoverView } from "@/components/DiscoverView";
 import { SettingsView } from "@/components/SettingsView";
+import { EnhancedSettingsView } from "@/components/EnhancedSettingsView";
 import MessagesView from "@/components/MessagesView";
+import { LiveStreamView } from "@/components/LiveStreamView";
+import { PvPBattleView } from "@/components/PvPBattleView";
+import { AdminPanel } from "@/components/AdminPanel";
 import { mockVideos } from "@/data/mockData";
 import { useAuth } from "@/hooks/useAuth";
-import { Loader2 } from "lucide-react";
+import { Loader2, Shield } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("home");
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
   const [isCommentOpen, setIsCommentOpen] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const { user, loading } = useAuth();
 
@@ -65,6 +71,10 @@ const Index = () => {
   }
 
   const renderContent = () => {
+    if (showAdminPanel) {
+      return <AdminPanel />;
+    }
+
     switch (activeTab) {
       case "home":
         return (
@@ -86,26 +96,55 @@ const Index = () => {
         );
       case "discover":
         return <DiscoverView />;
+      case "live":
+        return <LiveStreamView />;
+      case "pvp":
+        return <PvPBattleView />;
       case "messages":
         return <MessagesView />;
       case "profile":
         return <ProfileView />;
       case "settings":
-        return <SettingsView onBack={() => setActiveTab("profile")} />;
+        return <EnhancedSettingsView />;
       default:
         return null;
     }
   };
 
   return (
-    <div className="h-screen bg-black overflow-hidden">
+    <div className="h-screen bg-black overflow-hidden relative">
       {renderContent()}
       
-      <Navigation
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        onUploadClick={() => setIsUploadOpen(true)}
-      />
+      {/* Admin Access Button - only show if not in admin panel */}
+      {!showAdminPanel && (
+        <Button
+          size="icon"
+          variant="ghost"
+          className="absolute top-4 right-4 z-50 text-white/70 hover:text-white"
+          onClick={() => setShowAdminPanel(true)}
+        >
+          <Shield className="w-5 h-5" />
+        </Button>
+      )}
+
+      {/* Back button in admin panel */}
+      {showAdminPanel && (
+        <Button
+          variant="ghost"
+          className="absolute top-4 left-4 z-50"
+          onClick={() => setShowAdminPanel(false)}
+        >
+          Back to App
+        </Button>
+      )}
+      
+      {!showAdminPanel && (
+        <Navigation
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          onUploadClick={() => setIsUploadOpen(true)}
+        />
+      )}
 
       <CommentSheet
         isOpen={isCommentOpen}
