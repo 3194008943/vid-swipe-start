@@ -109,22 +109,103 @@ export type Database = {
         }
         Relationships: []
       }
+      gift_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          gift_id: string
+          id: string
+          recipient_id: string
+          sender_id: string
+          stream_id: string | null
+          total_price: number
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          gift_id: string
+          id?: string
+          recipient_id: string
+          sender_id: string
+          stream_id?: string | null
+          total_price: number
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          gift_id?: string
+          id?: string
+          recipient_id?: string
+          sender_id?: string
+          stream_id?: string | null
+          total_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gift_transactions_gift_id_fkey"
+            columns: ["gift_id"]
+            isOneToOne: false
+            referencedRelation: "gifts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gift_transactions_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: false
+            referencedRelation: "live_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gifts: {
+        Row: {
+          created_at: string
+          icon_url: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          price: number
+        }
+        Insert: {
+          created_at?: string
+          icon_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          price: number
+        }
+        Update: {
+          created_at?: string
+          icon_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          price?: number
+        }
+        Relationships: []
+      }
       hashtags: {
         Row: {
           created_at: string
+          created_by: string | null
           id: string
+          is_trending: boolean | null
           name: string
           usage_count: number | null
         }
         Insert: {
           created_at?: string
+          created_by?: string | null
           id?: string
+          is_trending?: boolean | null
           name: string
           usage_count?: number | null
         }
         Update: {
           created_at?: string
+          created_by?: string | null
           id?: string
+          is_trending?: boolean | null
           name?: string
           usage_count?: number | null
         }
@@ -158,6 +239,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      live_streams: {
+        Row: {
+          created_at: string
+          description: string | null
+          ended_at: string | null
+          gift_total: number | null
+          id: string
+          is_live: boolean | null
+          is_pvp: boolean | null
+          pvp_opponent_id: string | null
+          started_at: string | null
+          stream_key: string | null
+          stream_url: string | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          viewer_count: number | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          ended_at?: string | null
+          gift_total?: number | null
+          id?: string
+          is_live?: boolean | null
+          is_pvp?: boolean | null
+          pvp_opponent_id?: string | null
+          started_at?: string | null
+          stream_key?: string | null
+          stream_url?: string | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+          viewer_count?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          ended_at?: string | null
+          gift_total?: number | null
+          id?: string
+          is_live?: boolean | null
+          is_pvp?: boolean | null
+          pvp_opponent_id?: string | null
+          started_at?: string | null
+          stream_key?: string | null
+          stream_url?: string | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          viewer_count?: number | null
+        }
+        Relationships: []
       }
       messages: {
         Row: {
@@ -264,6 +402,72 @@ export type Database = {
         }
         Relationships: []
       }
+      pvp_battles: {
+        Row: {
+          challenger_gifts: number | null
+          challenger_id: string
+          challenger_stream_id: string | null
+          challenger_votes: number | null
+          created_at: string
+          ended_at: string | null
+          id: string
+          opponent_gifts: number | null
+          opponent_id: string
+          opponent_stream_id: string | null
+          opponent_votes: number | null
+          started_at: string | null
+          status: string | null
+          winner_id: string | null
+        }
+        Insert: {
+          challenger_gifts?: number | null
+          challenger_id: string
+          challenger_stream_id?: string | null
+          challenger_votes?: number | null
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          opponent_gifts?: number | null
+          opponent_id: string
+          opponent_stream_id?: string | null
+          opponent_votes?: number | null
+          started_at?: string | null
+          status?: string | null
+          winner_id?: string | null
+        }
+        Update: {
+          challenger_gifts?: number | null
+          challenger_id?: string
+          challenger_stream_id?: string | null
+          challenger_votes?: number | null
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          opponent_gifts?: number | null
+          opponent_id?: string
+          opponent_stream_id?: string | null
+          opponent_votes?: number | null
+          started_at?: string | null
+          status?: string | null
+          winner_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pvp_battles_challenger_stream_id_fkey"
+            columns: ["challenger_stream_id"]
+            isOneToOne: false
+            referencedRelation: "live_streams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pvp_battles_opponent_stream_id_fkey"
+            columns: ["opponent_stream_id"]
+            isOneToOne: false
+            referencedRelation: "live_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shop_products: {
         Row: {
           created_at: string
@@ -298,6 +502,66 @@ export type Database = {
           name?: string
           price?: number
           stock?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          autoplay_videos: boolean | null
+          created_at: string
+          data_saver_mode: boolean | null
+          font_size: string | null
+          id: string
+          language: string | null
+          notification_gifts: boolean | null
+          notification_live: boolean | null
+          notification_pvp: boolean | null
+          notification_videos: boolean | null
+          privacy_comments: string | null
+          privacy_gifts: string | null
+          privacy_profile: string | null
+          theme: string | null
+          two_factor_enabled: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          autoplay_videos?: boolean | null
+          created_at?: string
+          data_saver_mode?: boolean | null
+          font_size?: string | null
+          id?: string
+          language?: string | null
+          notification_gifts?: boolean | null
+          notification_live?: boolean | null
+          notification_pvp?: boolean | null
+          notification_videos?: boolean | null
+          privacy_comments?: string | null
+          privacy_gifts?: string | null
+          privacy_profile?: string | null
+          theme?: string | null
+          two_factor_enabled?: boolean | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          autoplay_videos?: boolean | null
+          created_at?: string
+          data_saver_mode?: boolean | null
+          font_size?: string | null
+          id?: string
+          language?: string | null
+          notification_gifts?: boolean | null
+          notification_live?: boolean | null
+          notification_pvp?: boolean | null
+          notification_videos?: boolean | null
+          privacy_comments?: string | null
+          privacy_gifts?: string | null
+          privacy_profile?: string | null
+          theme?: string | null
+          two_factor_enabled?: boolean | null
           updated_at?: string
           user_id?: string
         }
@@ -412,7 +676,10 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      is_admin: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
