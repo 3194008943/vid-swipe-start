@@ -55,17 +55,22 @@ export const AdminPanel: React.FC = () => {
   const checkAdminStatus = async () => {
     if (!user) return;
 
-    const { data } = await supabase
-      .from('profiles')
-      .select('bio')
-      .eq('id', user.id)
-      .single();
+    // Use the secure has_role function to check admin status
+    const { data, error } = await supabase
+      .rpc('has_role', { 
+        _user_id: user.id, 
+        _role: 'admin' 
+      });
 
-    // Check if user has admin or staff tag in bio
-    const hasAdminAccess = data?.bio?.includes('[ADMIN]') || data?.bio?.includes('[STAFF]');
-    setIsAdmin(hasAdminAccess);
+    if (error) {
+      console.error('Error checking admin status:', error);
+      setIsAdmin(false);
+      return;
+    }
+    
+    setIsAdmin(data || false);
 
-    if (!hasAdminAccess) {
+    if (!data) {
       toast.error("Access denied: Admin privileges required");
     }
   };

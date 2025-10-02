@@ -71,6 +71,31 @@ const Auth: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     
+    // Validate password strength
+    if (signupPassword.length < 8) {
+      toast.error("Password must be at least 8 characters long");
+      setLoading(false);
+      return;
+    }
+    
+    if (!/[A-Z]/.test(signupPassword)) {
+      toast.error("Password must contain at least one uppercase letter");
+      setLoading(false);
+      return;
+    }
+    
+    if (!/[a-z]/.test(signupPassword)) {
+      toast.error("Password must contain at least one lowercase letter");
+      setLoading(false);
+      return;
+    }
+    
+    if (!/[0-9]/.test(signupPassword)) {
+      toast.error("Password must contain at least one number");
+      setLoading(false);
+      return;
+    }
+    
     const { error, data } = await supabase.auth.signUp({
       email: signupEmail,
       password: signupPassword,
@@ -209,6 +234,9 @@ const Auth: React.FC = () => {
                     required
                     disabled={loading}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Password must be at least 8 characters and include uppercase, lowercase, and numbers
+                  </p>
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? (

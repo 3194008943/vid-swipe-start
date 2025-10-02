@@ -108,7 +108,8 @@ export const LiveStreamView: React.FC = () => {
       return;
     }
 
-    const { data, error } = await supabase
+    // Start the stream
+    const { data: streamData, error: streamError } = await supabase
       .from('live_streams')
       .insert({
         user_id: user.id,
@@ -120,14 +121,31 @@ export const LiveStreamView: React.FC = () => {
       .select()
       .single();
 
-    if (error) {
+    if (streamError) {
       toast.error("Failed to start stream");
-      console.error(error);
+      console.error(streamError);
       return;
     }
 
+    // Create secure stream credentials (only visible to stream owner)
+    const streamKey = `stream_${user.id}_${Date.now()}`;
+    const streamUrl = `rtmp://stream.example.com/live/${streamKey}`;
+    
+    const { error: credError } = await supabase
+      .from('stream_credentials')
+      .insert({
+        stream_id: streamData.id,
+        stream_key: streamKey,
+        stream_url: streamUrl
+      });
+
+    if (credError) {
+      console.error("Failed to create stream credentials:", credError);
+      // Still allow stream to continue, just without credentials
+    }
+
     setIsStreaming(true);
-    setSelectedStream(data);
+    setSelectedStream(streamData);
     toast.success("Stream started!");
   };
 

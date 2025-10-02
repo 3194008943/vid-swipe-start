@@ -251,8 +251,6 @@ export type Database = {
           is_pvp: boolean | null
           pvp_opponent_id: string | null
           started_at: string | null
-          stream_key: string | null
-          stream_url: string | null
           thumbnail_url: string | null
           title: string
           updated_at: string
@@ -269,8 +267,6 @@ export type Database = {
           is_pvp?: boolean | null
           pvp_opponent_id?: string | null
           started_at?: string | null
-          stream_key?: string | null
-          stream_url?: string | null
           thumbnail_url?: string | null
           title: string
           updated_at?: string
@@ -287,8 +283,6 @@ export type Database = {
           is_pvp?: boolean | null
           pvp_opponent_id?: string | null
           started_at?: string | null
-          stream_key?: string | null
-          stream_url?: string | null
           thumbnail_url?: string | null
           title?: string
           updated_at?: string
@@ -507,6 +501,62 @@ export type Database = {
         }
         Relationships: []
       }
+      stream_credentials: {
+        Row: {
+          created_at: string
+          id: string
+          stream_id: string
+          stream_key: string
+          stream_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          stream_id: string
+          stream_key: string
+          stream_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          stream_id?: string
+          stream_key?: string
+          stream_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stream_credentials_stream_id_fkey"
+            columns: ["stream_id"]
+            isOneToOne: true
+            referencedRelation: "live_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_settings: {
         Row: {
           autoplay_videos: boolean | null
@@ -676,13 +726,20 @@ export type Database = {
       }
     }
     Functions: {
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_admin: {
         Args: { _user_id: string }
         Returns: boolean
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -809,6 +866,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
