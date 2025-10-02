@@ -96,6 +96,12 @@ const Auth: React.FC = () => {
       return;
     }
     
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(signupPassword)) {
+      toast.error("Password must contain at least one special character");
+      setLoading(false);
+      return;
+    }
+    
     const { error, data } = await supabase.auth.signUp({
       email: signupEmail,
       password: signupPassword,

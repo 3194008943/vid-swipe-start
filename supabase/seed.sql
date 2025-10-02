@@ -1,0 +1,22 @@
+-- Seed file to create initial admin user
+-- 
+-- IMPORTANT: Only run this ONCE to create your first admin user
+-- Replace the user_id with the actual ID of the user you want to make admin
+-- You can find user IDs in the Supabase dashboard under Authentication > Users
+--
+-- To run this seed file:
+-- 1. Go to the Supabase SQL Editor
+-- 2. Copy and paste this content
+-- 3. Replace 'YOUR_USER_ID_HERE' with the actual user ID
+-- 4. Run the query
+
+-- Example: Insert admin role for a specific user
+-- UNCOMMENT AND MODIFY THE LINE BELOW:
+-- INSERT INTO public.user_roles (user_id, role) VALUES ('YOUR_USER_ID_HERE', 'admin');
+
+-- To make yourself an admin after signing up:
+-- 1. Sign up for an account in your app
+-- 2. Go to Supabase Dashboard > Authentication > Users
+-- 3. Find your user and copy the ID
+-- 4. Run this query with your ID:
+-- INSERT INTO public.user_roles (user_id, role) VALUES ('your-actual-user-id', 'admin');
