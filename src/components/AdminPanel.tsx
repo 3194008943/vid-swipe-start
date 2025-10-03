@@ -38,6 +38,8 @@ export const AdminPanel: React.FC = () => {
   const [liveStreams, setLiveStreams] = useState<any[]>([]);
   const [gifts, setGifts] = useState<any[]>([]);
   const [newGift, setNewGift] = useState({ name: '', price: '', icon_url: '' });
+  const [users, setUsers] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     checkAdminStatus();
@@ -49,6 +51,7 @@ export const AdminPanel: React.FC = () => {
       fetchReportedContent();
       fetchLiveStreams();
       fetchGifts();
+      fetchUsers();
     }
   }, [isAdmin]);
 
@@ -206,6 +209,63 @@ export const AdminPanel: React.FC = () => {
     }
   };
 
+  const fetchUsers = async () => {
+    const { data } = await supabase
+      .from('profiles')
+      .select(`
+        *,
+        user_roles (role),
+        user_settings (privacy_profile)
+      `)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    setUsers(data || []);
+  };
+
+  const toggleUserRole = async (userId: string, role: 'admin' | 'moderator') => {
+    // Check if role exists
+    const { data: existingRole } = await supabase
+      .from('user_roles')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('role', role)
+      .maybeSingle();
+
+    if (existingRole) {
+      // Remove role
+      const { error } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', userId)
+        .eq('role', role);
+
+      if (error) {
+        toast.error("Failed to remove role");
+      } else {
+        toast.success(`${role} role removed`);
+        fetchUsers();
+      }
+    } else {
+      // Add role
+      const { error } = await supabase
+        .from('user_roles')
+        .insert({ user_id: userId, role });
+
+      if (error) {
+        toast.error("Failed to add role");
+      } else {
+        toast.success(`${role} role granted`);
+        fetchUsers();
+      }
+    }
+  };
+
+  const filteredUsers = users.filter(user => 
+    user.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.display_name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -291,10 +351,11 @@ export const AdminPanel: React.FC = () => {
 
         {/* Management Tabs */}
         <Tabs defaultValue="moderation" className="space-y-4">
-          <TabsList className="grid grid-cols-4 w-full">
+          <TabsList className="grid grid-cols-5 w-full">
             <TabsTrigger value="moderation">Content Moderation</TabsTrigger>
             <TabsTrigger value="live">Live Streams</TabsTrigger>
             <TabsTrigger value="gifts">Gift Management</TabsTrigger>
+            <TabsTrigger value="users">User Settings</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
           </TabsList>
 
@@ -454,6 +515,81 @@ export const AdminPanel: React.FC = () => {
                       </Button>
                     </div>
                   ))}
+                </div>
+              </ScrollArea>
+            </Card>
+          </TabsContent>
+
+          {/* User Settings */}
+          <TabsContent value="users" className="space-y-4">
+            <Card className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold">User Management</h2>
+                <div className="relative w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search users..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+              
+              <ScrollArea className="h-[500px]">
+                <div className="space-y-3">
+                  {filteredUsers.map((user) => (
+                    <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center gap-4 flex-1">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-white font-semibold">
+                          {user.display_name?.[0]?.toUpperCase() || user.username?.[0]?.toUpperCase() || '?'}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold">{user.display_name || user.username}</p>
+                            {user.user_roles?.some((r: any) => r.role === 'admin') && (
+                              <Badge variant="destructive">Admin</Badge>
+                            )}
+                            {user.user_roles?.some((r: any) => r.role === 'moderator') && (
+                              <Badge variant="secondary">Moderator</Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground">@{user.username}</p>
+                          {user.bio && (
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{user.bio}</p>
+                          )}
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="outline" className="text-xs">
+                              Privacy: {user.user_settings?.[0]?.privacy_profile || 'public'}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant={user.user_roles?.some((r: any) => r.role === 'moderator') ? "default" : "outline"}
+                          onClick={() => toggleUserRole(user.id, 'moderator')}
+                        >
+                          {user.user_roles?.some((r: any) => r.role === 'moderator') ? 'Remove Mod' : 'Make Mod'}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant={user.user_roles?.some((r: any) => r.role === 'admin') ? "destructive" : "outline"}
+                          onClick={() => toggleUserRole(user.id, 'admin')}
+                        >
+                          {user.user_roles?.some((r: any) => r.role === 'admin') ? 'Remove Admin' : 'Make Admin'}
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {filteredUsers.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No users found
+                    </div>
+                  )}
                 </div>
               </ScrollArea>
             </Card>
