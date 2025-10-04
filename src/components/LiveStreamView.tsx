@@ -6,11 +6,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Heart, Gift, Users, Video, VideoOff, Mic, MicOff, Send, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Heart, Gift, Users, Video, VideoOff, Mic, MicOff, Send, X, Coins } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { formatNumber } from "@/lib/utils";
+
+interface GiftOption {
+  id: string;
+  name: string;
+  price: number;
+  icon_url: string;
+}
 
 interface LiveStream {
   id: string;
@@ -40,9 +48,14 @@ export const LiveStreamView: React.FC = () => {
   const [chatMessage, setChatMessage] = useState("");
   const [videoEnabled, setVideoEnabled] = useState(true);
   const [audioEnabled, setAudioEnabled] = useState(true);
+  const [gifts, setGifts] = useState<GiftOption[]>([]);
+  const [isGiftDialogOpen, setIsGiftDialogOpen] = useState(false);
+  const [userCoins, setUserCoins] = useState(0);
 
   useEffect(() => {
     fetchLiveStreams();
+    fetchGifts();
+    fetchUserCoins();
     
     // Subscribe to real-time updates
     const channel = supabase
@@ -65,6 +78,32 @@ export const LiveStreamView: React.FC = () => {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  const fetchGifts = async () => {
+    const { data, error } = await supabase
+      .from('gifts')
+      .select('*')
+      .eq('is_active', true)
+      .order('price', { ascending: true });
+
+    if (data) {
+      setGifts(data);
+    }
+  };
+
+  const fetchUserCoins = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('user_coins')
+      .select('balance')
+      .eq('user_id', user.id)
+      .single();
+
+    if (data) {
+      setUserCoins(Number(data.balance));
+    }
+  };
 
   const fetchLiveStreams = async () => {
     const { data: streams, error: streamsError } = await supabase
@@ -172,9 +211,57 @@ export const LiveStreamView: React.FC = () => {
     toast.success("Stream ended");
   };
 
-  const sendGift = async (streamId: string) => {
-    // This would integrate with the gifts system
-    toast.success("Gift sent! 🎁");
+  const sendGift = async (gift: GiftOption) => {
+    if (!user || !selectedStream) return;
+
+    if (userCoins < gift.price) {
+      toast.error("Insufficient coins! Get more coins to send gifts.");
+      return;
+    }
+
+    // Deduct coins from sender
+    const { error: coinsError } = await supabase
+      .from('user_coins')
+      .update({ 
+        balance: userCoins - gift.price,
+        total_spent: userCoins - gift.price
+      })
+      .eq('user_id', user.id);
+
+    if (coinsError) {
+      toast.error("Failed to send gift");
+      return;
+    }
+
+    // Add gift transaction
+    const { error: giftError } = await supabase
+      .from('gift_transactions')
+      .insert({
+        sender_id: user.id,
+        recipient_id: selectedStream.user_id,
+        gift_id: gift.id,
+        amount: 1,
+        total_price: gift.price,
+        stream_id: selectedStream.id
+      });
+
+    if (giftError) {
+      toast.error("Failed to record gift");
+      return;
+    }
+
+    // Update stream gift total
+    const { error: streamError } = await supabase
+      .from('live_streams')
+      .update({
+        gift_total: (selectedStream.gift_total || 0) + gift.price
+      })
+      .eq('id', selectedStream.id);
+
+    toast.success(`Sent ${gift.icon_url} ${gift.name}! 🎁`);
+    setIsGiftDialogOpen(false);
+    fetchUserCoins();
+    fetchLiveStreams();
   };
 
   if (selectedStream || isStreaming) {
@@ -247,15 +334,19 @@ export const LiveStreamView: React.FC = () => {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => sendGift(selectedStream?.id || "")}
+                    onClick={() => setIsGiftDialogOpen(true)}
                   >
                     <Gift className="w-4 h-4 mr-1" />
                     Send Gift
                   </Button>
+                  <Badge variant="secondary">
+                    <Coins className="w-3 h-3 mr-1" />
+                    {formatNumber(userCoins)}
+                  </Badge>
                 </div>
                 
                 <div className="text-sm text-muted-foreground">
-                  Gifts: ${formatNumber(selectedStream?.gift_total || 0)}
+                  Gifts: {formatNumber(selectedStream?.gift_total || 0)} coins
                 </div>
               </div>
             </Card>
@@ -298,6 +389,42 @@ export const LiveStreamView: React.FC = () => {
             </Card>
           </div>
         </div>
+
+        {/* Gift Dialog */}
+        <Dialog open={isGiftDialogOpen} onOpenChange={setIsGiftDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center justify-between">
+                <span>Send a Gift</span>
+                <Badge variant="secondary" className="text-lg">
+                  <Coins className="w-4 h-4 mr-1" />
+                  {formatNumber(userCoins)} Coins
+                </Badge>
+              </DialogTitle>
+            </DialogHeader>
+            
+            <ScrollArea className="max-h-[60vh] pr-4">
+              <div className="grid grid-cols-3 md:grid-cols-4 gap-4 p-4">
+                {gifts.map((gift) => (
+                  <Button
+                    key={gift.id}
+                    variant="outline"
+                    className="h-auto flex-col gap-2 p-4 hover:border-primary hover:bg-primary/5"
+                    onClick={() => sendGift(gift)}
+                    disabled={userCoins < gift.price}
+                  >
+                    <span className="text-4xl">{gift.icon_url}</span>
+                    <span className="text-sm font-semibold">{gift.name}</span>
+                    <div className="flex items-center gap-1 text-xs">
+                      <Coins className="w-3 h-3 text-yellow-500" />
+                      {formatNumber(gift.price)}
+                    </div>
+                  </Button>
+                ))}
+              </div>
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }

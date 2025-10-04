@@ -153,7 +153,10 @@ export const ProfileView: React.FC = () => {
     {
       icon: <ShoppingBag className="h-4 w-4" />,
       label: "Shop",
-      action: () => navigate("/shop"),
+      action: () => {
+        const event = new CustomEvent('navigate', { detail: 'shop' });
+        window.dispatchEvent(event);
+      },
       color: "bg-purple-500/10 text-purple-500"
     },
     {

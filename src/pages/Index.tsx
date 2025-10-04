@@ -12,6 +12,7 @@ import MessagesView from "@/components/MessagesView";
 import { LiveStreamView } from "@/components/LiveStreamView";
 import { PvPBattleView } from "@/components/PvPBattleView";
 import { AdminPanel } from "@/components/AdminPanel";
+import { ShopView } from "@/components/ShopView";
 import { mockVideos } from "@/data/mockData";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2, Shield } from "lucide-react";
@@ -48,8 +49,8 @@ const Index = () => {
   // Listen for settings navigation from ProfileView
   useEffect(() => {
     const handleNavigate = (e: CustomEvent) => {
-      if (e.detail === 'settings') {
-        setActiveTab('settings');
+      if (e.detail === 'settings' || e.detail === 'shop') {
+        setActiveTab(e.detail);
       }
     };
     
@@ -106,6 +107,8 @@ const Index = () => {
         return <ProfileView />;
       case "settings":
         return <EnhancedSettingsView />;
+      case "shop":
+        return <ShopView />;
       default:
         return null;
     }
@@ -115,12 +118,12 @@ const Index = () => {
     <div className="h-screen bg-black overflow-hidden relative">
       {renderContent()}
       
-      {/* Admin Access Button - only show if not in admin panel */}
-      {!showAdminPanel && (
+      {/* Admin Access Button - only show if not in admin panel and not on certain tabs */}
+      {!showAdminPanel && !['settings', 'shop'].includes(activeTab) && (
         <Button
           size="icon"
           variant="ghost"
-          className="absolute top-4 right-4 z-50 text-white/70 hover:text-white"
+          className="absolute top-6 right-6 z-50 text-white/70 hover:text-white bg-black/20 hover:bg-black/40"
           onClick={() => setShowAdminPanel(true)}
         >
           <Shield className="w-5 h-5" />
@@ -131,7 +134,7 @@ const Index = () => {
       {showAdminPanel && (
         <Button
           variant="ghost"
-          className="absolute top-4 left-4 z-50"
+          className="absolute top-6 left-6 z-50 bg-background/80 hover:bg-background"
           onClick={() => setShowAdminPanel(false)}
         >
           Back to App

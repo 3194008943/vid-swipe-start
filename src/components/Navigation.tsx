@@ -1,5 +1,5 @@
 import React from "react";
-import { Home, Search, Plus, User, MessageCircle, LogOut, Video } from "lucide-react";
+import { Home, Search, Plus, User, MessageCircle, LogOut, Video, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +23,7 @@ export const Navigation: React.FC<NavigationProps> = ({
     { id: "home", icon: Home, label: "Home" },
     { id: "discover", icon: Search, label: "Discover" },
     { id: "upload", icon: Plus, label: "Upload", special: true },
+    { id: "shop", icon: ShoppingBag, label: "Shop" },
     { id: "live", icon: Video, label: "Go Live" },
     { id: "messages", icon: MessageCircle, label: "Messages" },
     { id: "profile", icon: User, label: "Profile" },
