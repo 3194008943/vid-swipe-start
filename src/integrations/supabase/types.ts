@@ -366,6 +366,42 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_transactions: {
+        Row: {
+          amount: number
+          coins: number
+          created_at: string
+          id: string
+          payment_method: string | null
+          status: string
+          stripe_payment_intent_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          coins: number
+          created_at?: string
+          id?: string
+          payment_method?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          coins?: number
+          created_at?: string
+          id?: string
+          payment_method?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -373,8 +409,12 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          instagram_url: string | null
+          twitter_url: string | null
           updated_at: string
           username: string
+          website_url: string | null
+          youtube_url: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -382,8 +422,12 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id: string
+          instagram_url?: string | null
+          twitter_url?: string | null
           updated_at?: string
           username: string
+          website_url?: string | null
+          youtube_url?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -391,8 +435,12 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          instagram_url?: string | null
+          twitter_url?: string | null
           updated_at?: string
           username?: string
+          website_url?: string | null
+          youtube_url?: string | null
         }
         Relationships: []
       }
@@ -458,6 +506,47 @@ export type Database = {
             columns: ["opponent_stream_id"]
             isOneToOne: false
             referencedRelation: "live_streams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      refunds: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          payment_transaction_id: string
+          reason: string | null
+          status: string
+          stripe_refund_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          payment_transaction_id: string
+          reason?: string | null
+          status?: string
+          stripe_refund_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          payment_transaction_id?: string
+          reason?: string | null
+          status?: string
+          stripe_refund_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refunds_payment_transaction_id_fkey"
+            columns: ["payment_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "payment_transactions"
             referencedColumns: ["id"]
           },
         ]

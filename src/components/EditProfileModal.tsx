@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,6 +29,10 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     display_name: "",
     bio: "",
     avatar_url: "",
+    instagram_url: "",
+    youtube_url: "",
+    twitter_url: "",
+    website_url: "",
   });
 
   useEffect(() => {
@@ -52,6 +56,10 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
         display_name: data.display_name || "",
         bio: data.bio || "",
         avatar_url: data.avatar_url || "",
+        instagram_url: data.instagram_url || "",
+        youtube_url: data.youtube_url || "",
+        twitter_url: data.twitter_url || "",
+        website_url: data.website_url || "",
       });
     }
   };
@@ -107,6 +115,10 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
           display_name: formData.display_name,
           bio: formData.bio,
           avatar_url: formData.avatar_url,
+          instagram_url: formData.instagram_url,
+          youtube_url: formData.youtube_url,
+          twitter_url: formData.twitter_url,
+          website_url: formData.website_url,
         })
         .eq("id", user.id);
 
@@ -132,92 +144,130 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Profile</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex flex-col items-center space-y-2">
-            <Avatar className="h-24 w-24">
-              <AvatarImage src={formData.avatar_url} />
-              <AvatarFallback>
-                {formData.username?.charAt(0)?.toUpperCase() || "U"}
-              </AvatarFallback>
-            </Avatar>
-            <Label htmlFor="avatar" className="cursor-pointer">
-              <div className="flex items-center gap-2 text-sm text-primary hover:text-primary/80">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="flex flex-col items-center space-y-3">
+            <div className="relative">
+              <Avatar className="h-24 w-24">
+                <AvatarImage src={formData.avatar_url} />
+                <AvatarFallback>
+                  {formData.username?.charAt(0)?.toUpperCase() || "U"}
+                </AvatarFallback>
+              </Avatar>
+              <Label 
+                htmlFor="avatar" 
+                className="absolute bottom-0 right-0 cursor-pointer bg-primary text-primary-foreground rounded-full p-2 hover:bg-primary/90 transition-colors"
+              >
                 <Camera className="h-4 w-4" />
-                {uploading ? "Uploading..." : "Change Avatar"}
-              </div>
-              <input
-                id="avatar"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleAvatarUpload}
-                disabled={uploading}
+                <input
+                  id="avatar"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleAvatarUpload}
+                  disabled={uploading}
+                />
+              </Label>
+            </div>
+            {uploading && <p className="text-sm text-muted-foreground">Uploading...</p>}
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                value={formData.username}
+                onChange={(e) =>
+                  setFormData({ ...formData, username: e.target.value })
+                }
+                placeholder="Enter username"
               />
-            </Label>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="display_name">Display Name</Label>
+              <Input
+                id="display_name"
+                value={formData.display_name}
+                onChange={(e) =>
+                  setFormData({ ...formData, display_name: e.target.value })
+                }
+                placeholder="Enter display name"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="bio">Bio</Label>
+              <Textarea
+                id="bio"
+                value={formData.bio}
+                onChange={(e) =>
+                  setFormData({ ...formData, bio: e.target.value })
+                }
+                placeholder="Tell us about yourself"
+                className="min-h-[100px]"
+              />
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
-            <Input
-              id="username"
-              value={formData.username}
-              onChange={(e) =>
-                setFormData({ ...formData, username: e.target.value })
-              }
-              placeholder="Enter username"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="display_name">Display Name</Label>
-            <Input
-              id="display_name"
-              value={formData.display_name}
-              onChange={(e) =>
-                setFormData({ ...formData, display_name: e.target.value })
-              }
-              placeholder="Enter display name"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="bio">Bio</Label>
-            <Textarea
-              id="bio"
-              value={formData.bio}
-              onChange={(e) =>
-                setFormData({ ...formData, bio: e.target.value })
-              }
-              placeholder="Tell us about yourself"
-              rows={4}
-            />
-          </div>
-
-          <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={loading}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                "Save Changes"
-              )}
-            </Button>
+          <div className="border-t pt-4">
+            <h3 className="text-sm font-semibold mb-3 text-muted-foreground">Social Links</h3>
+            <div className="space-y-3">
+              <Input
+                placeholder="Instagram URL"
+                value={formData.instagram_url}
+                onChange={(e) =>
+                  setFormData({ ...formData, instagram_url: e.target.value })
+                }
+              />
+              <Input
+                placeholder="YouTube URL"
+                value={formData.youtube_url}
+                onChange={(e) =>
+                  setFormData({ ...formData, youtube_url: e.target.value })
+                }
+              />
+              <Input
+                placeholder="Twitter URL"
+                value={formData.twitter_url}
+                onChange={(e) =>
+                  setFormData({ ...formData, twitter_url: e.target.value })
+                }
+              />
+              <Input
+                placeholder="Website URL"
+                value={formData.website_url}
+                onChange={(e) =>
+                  setFormData({ ...formData, website_url: e.target.value })
+                }
+              />
+            </div>
           </div>
         </form>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} disabled={loading}>
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              "Save"
+            )}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
