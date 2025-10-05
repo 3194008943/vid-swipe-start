@@ -39,8 +39,10 @@ export const ShopView: React.FC = () => {
 
   useEffect(() => {
     fetchProducts();
-    fetchUserCoins();
-  }, []);
+    if (user) {
+      fetchUserCoins();
+    }
+  }, [user]);
 
   const fetchProducts = async () => {
     const { data, error } = await supabase
