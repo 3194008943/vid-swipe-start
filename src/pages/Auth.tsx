@@ -77,7 +77,11 @@ const Auth: React.FC = () => {
     });
 
     if (error) {
-      toast.error(error.message);
+      if (error.message.includes('not enabled')) {
+        toast.error(`${provider.charAt(0).toUpperCase() + provider.slice(1)} login is not enabled. Please configure it in Supabase Dashboard → Authentication → Providers.`);
+      } else {
+        toast.error(error.message);
+      }
     }
   };
 
