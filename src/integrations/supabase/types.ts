@@ -807,44 +807,23 @@ export type Database = {
       }
     }
     Views: {
-      conversation_view: {
-        Row: {
-          conversation_id: string | null
-          created_at: string | null
-          last_message: string | null
-          last_message_at: string | null
-          last_message_id: string | null
-          last_message_type: string | null
-          other_user_id: string | null
-          read_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          conversation_id?: string | null
-          created_at?: string | null
-          last_message?: string | null
-          last_message_at?: string | null
-          last_message_id?: string | null
-          last_message_type?: string | null
-          other_user_id?: never
-          read_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          conversation_id?: string | null
-          created_at?: string | null
-          last_message?: string | null
-          last_message_at?: string | null
-          last_message_id?: string | null
-          last_message_type?: string | null
-          other_user_id?: never
-          read_at?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
+      get_user_conversations: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          conversation_id: string
+          created_at: string
+          last_message: string
+          last_message_at: string
+          last_message_id: string
+          last_message_type: string
+          other_user_id: string
+          read_at: string
+          updated_at: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
