@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { formatNumber } from "@/lib/utils";
+import { LiveChatBox } from "./LiveChatBox";
 
 interface GiftOption {
   id: string;
@@ -155,6 +156,7 @@ export const LiveStreamView: React.FC = () => {
         title: streamTitle,
         description: streamDescription,
         is_live: true,
+        viewer_count: 0,
         started_at: new Date().toISOString()
       })
       .select()
@@ -180,12 +182,19 @@ export const LiveStreamView: React.FC = () => {
 
     if (credError) {
       console.error("Failed to create stream credentials:", credError);
-      // Still allow stream to continue, just without credentials
     }
+
+    // Track streamer as first viewer
+    await supabase
+      .from('stream_viewers')
+      .insert({
+        stream_id: streamData.id,
+        user_id: user.id
+      });
 
     setIsStreaming(true);
     setSelectedStream(streamData);
-    toast.success("Stream started!");
+    toast.success("🔴 You're now live!");
   };
 
   const endStream = async () => {
@@ -264,6 +273,37 @@ export const LiveStreamView: React.FC = () => {
     fetchLiveStreams();
   };
 
+  // Track when user joins/leaves stream
+  useEffect(() => {
+    if (!selectedStream || !user || selectedStream.user_id === user.id) return;
+
+    const joinStream = async () => {
+      await supabase
+        .from('stream_viewers')
+        .upsert({
+          stream_id: selectedStream.id,
+          user_id: user.id,
+          left_at: null
+        }, {
+          onConflict: 'stream_id,user_id'
+        });
+    };
+
+    const leaveStream = async () => {
+      await supabase
+        .from('stream_viewers')
+        .update({ left_at: new Date().toISOString() })
+        .eq('stream_id', selectedStream.id)
+        .eq('user_id', user.id);
+    };
+
+    joinStream();
+
+    return () => {
+      leaveStream();
+    };
+  }, [selectedStream, user]);
+
   if (selectedStream || isStreaming) {
     return (
       <div className="min-h-screen bg-background p-4">
@@ -272,9 +312,21 @@ export const LiveStreamView: React.FC = () => {
           <div className="lg:col-span-2 space-y-4">
             <Card className="relative aspect-video bg-black overflow-hidden">
               <div className="absolute inset-0 flex items-center justify-center">
-                <Video className="w-16 h-16 text-white/50" />
+                <div className="text-center space-y-4">
+                  <Video className="w-16 h-16 text-white/50 mx-auto" />
+                  <p className="text-white/70 text-sm">
+                    {isStreaming ? "Broadcasting..." : "Connecting to stream..."}
+                  </p>
+                </div>
               </div>
               
+              {/* Live Badge */}
+              <div className="absolute top-4 left-4">
+                <Badge className="bg-red-500 text-white animate-pulse">
+                  🔴 LIVE
+                </Badge>
+              </div>
+
               {/* Stream Controls */}
               <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
                 <div className="flex gap-2">
@@ -316,78 +368,69 @@ export const LiveStreamView: React.FC = () => {
 
             {/* Stream Info */}
             <Card className="p-4">
-              <h2 className="text-xl font-bold">{selectedStream?.title || streamTitle}</h2>
-              <p className="text-muted-foreground mt-2">
-                {selectedStream?.description || streamDescription}
-              </p>
-              
-              <div className="flex items-center justify-between mt-4">
-                <div className="flex items-center gap-4">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => toast.success("Liked!")}
-                  >
-                    <Heart className="w-4 h-4 mr-1" />
-                    Like
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setIsGiftDialogOpen(true)}
-                  >
-                    <Gift className="w-4 h-4 mr-1" />
-                    Send Gift
-                  </Button>
-                  <Badge variant="secondary">
-                    <Coins className="w-3 h-3 mr-1" />
-                    {formatNumber(userCoins)}
-                  </Badge>
-                </div>
+              <div className="flex items-start gap-3">
+                <Avatar className="w-12 h-12">
+                  <AvatarImage src={selectedStream?.profiles?.avatar_url} />
+                  <AvatarFallback>
+                    {selectedStream?.profiles?.username?.[0]?.toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
                 
-                <div className="text-sm text-muted-foreground">
-                  Gifts: {formatNumber(selectedStream?.gift_total || 0)} coins
+                <div className="flex-1">
+                  <h2 className="text-xl font-bold">{selectedStream?.title || streamTitle}</h2>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedStream?.profiles?.display_name || selectedStream?.profiles?.username}
+                  </p>
+                  {selectedStream?.description && (
+                    <p className="text-muted-foreground mt-2">
+                      {selectedStream.description}
+                    </p>
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3 mt-4">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => toast.success("Liked! ❤️")}
+                >
+                  <Heart className="w-4 h-4 mr-1" />
+                  Like
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setIsGiftDialogOpen(true)}
+                  disabled={selectedStream?.user_id === user?.id}
+                >
+                  <Gift className="w-4 h-4 mr-1" />
+                  Send Gift
+                </Button>
+                <Badge variant="secondary">
+                  <Coins className="w-3 h-3 mr-1" />
+                  {formatNumber(userCoins)} Coins
+                </Badge>
+                
+                <div className="ml-auto text-sm text-muted-foreground">
+                  Total Gifts: {formatNumber(selectedStream?.gift_total || 0)} coins
                 </div>
               </div>
             </Card>
           </div>
 
           {/* Chat Section */}
-          <div className="space-y-4">
-            <Card className="h-[600px] flex flex-col">
-              <div className="p-4 border-b">
-                <h3 className="font-semibold">Live Chat</h3>
-              </div>
-              
-              <ScrollArea className="flex-1 p-4">
-                <div className="space-y-2">
-                  {/* Chat messages would go here */}
-                  <div className="text-center text-muted-foreground py-8">
-                    Chat messages will appear here
-                  </div>
-                </div>
-              </ScrollArea>
-              
-              <div className="p-4 border-t">
-                <div className="flex gap-2">
-                  <Input
-                    value={chatMessage}
-                    onChange={(e) => setChatMessage(e.target.value)}
-                    placeholder="Type a message..."
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        toast.success("Message sent!");
-                        setChatMessage("");
-                      }
-                    }}
-                  />
-                  <Button size="icon">
-                    <Send className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          </div>
+          <Card className="h-[600px] lg:h-auto">
+            <div className="p-4 border-b">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Send className="w-4 h-4" />
+                Live Chat
+              </h3>
+            </div>
+            <div className="h-[calc(600px-60px)] lg:h-[calc(100vh-280px)]">
+              <LiveChatBox streamId={selectedStream?.id || ""} />
+            </div>
+          </Card>
         </div>
 
         {/* Gift Dialog */}
@@ -409,7 +452,7 @@ export const LiveStreamView: React.FC = () => {
                   <Button
                     key={gift.id}
                     variant="outline"
-                    className="h-auto flex-col gap-2 p-4 hover:border-primary hover:bg-primary/5"
+                    className="h-auto flex-col gap-2 p-4 hover:border-primary hover:bg-primary/5 transition-all"
                     onClick={() => sendGift(gift)}
                     disabled={userCoins < gift.price}
                   >
