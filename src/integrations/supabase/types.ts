@@ -810,6 +810,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_public_live_streams: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          created_at: string
+          description: string
+          id: string
+          is_live: boolean
+          is_pvp: boolean
+          started_at: string
+          thumbnail_url: string
+          title: string
+          user_id: string
+          viewer_count: number
+        }[]
+      }
       get_user_conversations: {
         Args: Record<PropertyKey, never>
         Returns: {
