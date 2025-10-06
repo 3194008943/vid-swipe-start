@@ -39,6 +39,9 @@ export const ShopView: React.FC = () => {
 
   useEffect(() => {
     fetchProducts();
+  }, []);
+
+  useEffect(() => {
     if (user) {
       fetchUserCoins();
     }
